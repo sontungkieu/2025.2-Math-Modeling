@@ -1,0 +1,22 @@
+[project]
+name = "pedestrian-flow-model"
+version = "0.1.0"
+description = "Microscopic pedestrian flow simulation model"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib==3.10.3",
+    "numpy==2.2.6",
+    "pandas==2.3.0",
+    "tqdm==4.67.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--disable-plugin-autoload"]
+pythonpath = ["."]
+testpaths = ["tests"]

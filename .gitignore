@@ -1,0 +1,31 @@
+# Environment and secrets
+.env
+*.env
+.venv/
+venv/
+env/
+pedestrian-venv/
+
+# Python cache/build artifacts
+__pycache__/
+*/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Editors and local OS files
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Archives and generated outputs
+*.zip*
+output/
