@@ -15,6 +15,7 @@ This project implements and analyzes a microscopic model of pedestrian flow base
 - `main.py` — Runs experiments, sweeps parameters, and saves results.
 - `model.py` — Core simulation logic and model implementation.
 - `utils.py` — Plotting and analysis utilities.
+- `plot_figures.py` — Generates modern and paper-style figures from experiment CSV outputs.
 - `output/` — Directory for generated CSV and PNG files.
 
 ## Model Convention
@@ -66,6 +67,30 @@ Open a new terminal if `uv` is not found after installation.
 To run the main experiment and generate data:
 ```bash
 uv run python main.py
+```
+
+Run a specific experiment:
+```bash
+uv run python main.py --experiment exp1
+uv run python main.py --experiment exp2
+uv run python main.py --experiment exp3
+```
+
+Run all experiments:
+```bash
+uv run python main.py --experiment all
+```
+
+### Generating Figures
+
+After CSV outputs exist in `output/`, generate modern presentation figures and compact paper-style figures:
+```bash
+uv run python plot_figures.py
+```
+
+Generate only selected experiments or styles:
+```bash
+uv run python plot_figures.py --experiments exp1 exp3 --styles paper
 ```
 
 ### Running Tests
