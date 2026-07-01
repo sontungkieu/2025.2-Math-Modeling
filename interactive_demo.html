@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedestrian Flow Lab</title>
+    <title>Mathematical Modeling Project</title>
     <style>
         :root {
             --bg: #f7f4ee;
@@ -81,6 +81,29 @@
             gap: 6px;
             justify-items: end;
             color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .top-actions {
+            display: grid;
+            gap: 12px;
+            justify-items: end;
+        }
+
+        .language-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            min-width: 112px;
+            padding: 4px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: var(--surface-2);
+        }
+
+        .language-switch .segment {
+            min-height: 30px;
+            border-radius: 999px;
             font-size: 0.78rem;
         }
 
@@ -207,7 +230,7 @@
 
         .buttons {
             display: grid;
-            grid-template-columns: 1fr 44px 44px;
+            grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
 
@@ -228,6 +251,13 @@
             color: var(--ink);
             border-color: var(--line);
             background: var(--surface);
+        }
+
+        .btn.reset {
+            grid-column: 1 / -1;
+            color: var(--coral);
+            border-color: rgba(225, 29, 72, 0.28);
+            background: #fff1f2;
         }
 
         .btn:hover {
@@ -328,6 +358,10 @@
                 justify-items: start;
             }
 
+            .top-actions {
+                justify-items: start;
+            }
+
             .metrics {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
@@ -374,60 +408,70 @@
     <main class="app">
         <header class="topbar">
             <div>
-                <p class="eyebrow">Pedestrian Flow Lab</p>
-                <h1>Mô phỏng dòng người đi bộ trong hành lang tuần hoàn</h1>
-                <p class="subhead">Mô hình 1D dùng quy ước người phía trước của i là i+1, khoảng cách được tính modulo L.</p>
+                <p class="eyebrow" data-i18n="eyebrow">Mathematical Modeling Project</p>
+                <h1 data-i18n="title">Mô phỏng dòng người đi bộ trong hành lang tuần hoàn</h1>
+                <p class="subhead" data-i18n="subhead">Mô hình 1D dùng quy ước người phía trước của i là i+1, khoảng cách được tính modulo L.</p>
             </div>
-            <div class="mode-chip">
-                <span>Interaction mode</span>
-                <strong id="modeLabel">Remote action</strong>
+            <div class="top-actions">
+                <div class="language-switch" role="group" aria-label="Language">
+                    <button class="segment active" id="langVi" type="button">VI</button>
+                    <button class="segment" id="langEn" type="button">EN</button>
+                </div>
+                <div class="mode-chip">
+                    <span data-i18n="interactionMode">Chế độ tương tác</span>
+                    <strong id="modeLabel">Tương tác từ xa</strong>
+                </div>
             </div>
         </header>
 
         <div class="layout">
             <aside class="controls" aria-label="Bảng điều khiển mô phỏng">
                 <section class="section">
-                    <h2 class="section-title">Mô hình</h2>
+                    <h2 class="section-title" data-i18n="modelSection">Mô hình</h2>
                     <div class="segmented" role="group" aria-label="Chọn loại tương tác">
-                        <button class="segment active" id="remoteOn" type="button">Remote</button>
-                        <button class="segment" id="remoteOff" type="button">Hard-body</button>
+                        <button class="segment active" id="remoteOn" type="button" data-i18n="remoteButton">Từ xa</button>
+                        <button class="segment" id="remoteOff" type="button" data-i18n="hardBodyButton">Vật thể cứng</button>
                     </div>
                 </section>
 
                 <section class="section">
-                    <h2 class="section-title">Tham số</h2>
+                    <h2 class="section-title" data-i18n="parametersSection">Tham số</h2>
                     <div class="control">
-                        <label for="paramN">Số người N <output id="outN">21</output></label>
+                        <label for="paramN"><span data-i18n="peopleCount">Số người N</span> <output id="outN">21</output></label>
                         <input id="paramN" type="range" min="2" max="43" value="21">
                     </div>
                     <div class="control">
-                        <label for="paramB">Hệ số b <output id="outB">0.56</output></label>
+                        <label for="paramL"><span data-i18n="corridorLength">Chiều dài hành lang L</span> <output id="outL">17.3 m</output></label>
+                        <input id="paramL" type="range" min="8" max="30" step="0.1" value="17.3">
+                    </div>
+                    <div class="control">
+                        <label for="paramB"><span data-i18n="coefficientB">Hệ số b</span> <output id="outB">0.56</output></label>
                         <input id="paramB" type="range" min="0" max="1.5" step="0.05" value="0.56">
                     </div>
                     <div class="control">
-                        <label for="paramV0">Vận tốc mong muốn <output id="outV0">1.24 m/s</output></label>
+                        <label for="paramV0"><span data-i18n="desiredVelocity">Vận tốc mong muốn</span> <output id="outV0">1.24 m/s</output></label>
                         <input id="paramV0" type="range" min="0.5" max="2" step="0.05" value="1.24">
                     </div>
                     <div class="control">
-                        <label for="paramTau">Thời gian thư giãn <output id="outTau">0.61 s</output></label>
+                        <label for="paramTau"><span data-i18n="relaxationTime">Thời gian thư giãn</span> <output id="outTau">0.61 s</output></label>
                         <input id="paramTau" type="range" min="0.1" max="2" step="0.05" value="0.61">
                     </div>
                     <div class="control">
-                        <label for="paramE">Cường độ e <output id="outE">0.07</output></label>
+                        <label for="paramE"><span data-i18n="remoteStrength">Cường độ e</span> <output id="outE">0.07</output></label>
                         <input id="paramE" type="range" min="0.01" max="0.3" step="0.01" value="0.07">
                     </div>
                     <div class="control">
-                        <label for="paramSpeed">Tốc độ demo <output id="outSpeed">25 bước/frame</output></label>
+                        <label for="paramSpeed"><span data-i18n="demoSpeed">Tốc độ demo</span> <output id="outSpeed">25 bước/frame</output></label>
                         <input id="paramSpeed" type="range" min="1" max="80" step="1" value="25">
                     </div>
                 </section>
 
                 <section class="section">
-                    <h2 class="section-title">Điều khiển</h2>
+                    <h2 class="section-title" data-i18n="controlsSection">Điều khiển</h2>
                     <div class="buttons">
                         <button class="btn primary" id="playButton" type="button">Tạm dừng</button>
-                        <button class="btn icon" id="stepButton" type="button" aria-label="Bước tiếp">›</button>
-                        <button class="btn icon" id="resetButton" type="button" aria-label="Khởi động lại">↺</button>
+                        <button class="btn icon" id="stepButton" type="button" data-i18n="stepButton">Bước tiếp</button>
+                        <button class="btn reset" id="resetButton" type="button">Reset</button>
                     </div>
                 </section>
             </aside>
@@ -435,26 +479,26 @@
             <section class="stage">
                 <div class="metrics" aria-label="Chỉ số mô phỏng">
                     <div class="metric">
-                        <span>Mật độ</span>
+                        <span data-i18n="densityMetric">Mật độ</span>
                         <strong id="metricDensity">1.21 /m</strong>
                     </div>
                     <div class="metric">
-                        <span>Vận tốc TB</span>
+                        <span data-i18n="meanVelocityMetric">Vận tốc TB</span>
                         <strong id="metricVelocity">0.00 m/s</strong>
                     </div>
                     <div class="metric">
-                        <span>Khoảng cách min</span>
+                        <span data-i18n="minGapMetric">Khoảng cách min</span>
                         <strong id="metricGap">0.36 m</strong>
                     </div>
                     <div class="metric">
-                        <span>Bị chặn</span>
+                        <span data-i18n="blockedMetric">Bị chặn</span>
                         <strong id="metricBlocked">0</strong>
                     </div>
                 </div>
 
                 <article class="stage-panel">
                     <div class="panel-head">
-                        <h2>Hành lang tuần hoàn L = 17.3 m</h2>
+                        <h2 id="corridorTitle">Hành lang tuần hoàn L = 17.3 m</h2>
                         <span id="stepReadout">t = 0.000 s</span>
                     </div>
                     <div class="canvas-wrap">
@@ -464,8 +508,8 @@
 
                 <article class="stage-panel">
                     <div class="panel-head">
-                        <h2>Không gian - thời gian</h2>
-                        <span>x theo frame, người được theo dõi màu coral</span>
+                        <h2 data-i18n="spaceTimeTitle">Không gian - thời gian</h2>
+                        <span data-i18n="spaceTimeSubtitle">x theo frame, vòng cam = hard-body stop</span>
                     </div>
                     <div class="canvas-wrap">
                         <canvas id="spaceTimeCanvas"></canvas>
@@ -476,7 +520,6 @@
     </main>
 
     <script>
-        const L = 17.3;
         const dt = 0.001;
         const a = 0.36;
         const f = 2.0;
@@ -494,7 +537,86 @@
             surface: "#fffdf8",
         };
 
+        const translations = {
+            vi: {
+                pageTitle: "Mathematical Modeling Project",
+                eyebrow: "Mathematical Modeling Project",
+                title: "Mô phỏng dòng người đi bộ trong hành lang tuần hoàn",
+                subhead: "Mô hình 1D dùng quy ước người phía trước của i là i+1, khoảng cách được tính modulo L.",
+                interactionMode: "Chế độ tương tác",
+                remoteMode: "Tương tác từ xa",
+                hardBodyMode: "Chỉ vật thể cứng",
+                modelSection: "Mô hình",
+                remoteButton: "Từ xa",
+                hardBodyButton: "Vật thể cứng",
+                parametersSection: "Tham số",
+                peopleCount: "Số người N",
+                corridorLength: "Chiều dài hành lang L",
+                coefficientB: "Hệ số b",
+                desiredVelocity: "Vận tốc mong muốn",
+                relaxationTime: "Thời gian thư giãn",
+                remoteStrength: "Cường độ e",
+                demoSpeed: "Tốc độ demo",
+                stepsPerFrame: "bước/frame",
+                controlsSection: "Điều khiển",
+                pauseButton: "Tạm dừng",
+                resumeButton: "Tiếp tục",
+                stepButton: "Bước tiếp",
+                resetButton: "Reset",
+                densityMetric: "Mật độ",
+                meanVelocityMetric: "Vận tốc TB",
+                minGapMetric: "Khoảng cách min",
+                blockedMetric: "Bị chặn",
+                corridorTitle: "Hành lang tuần hoàn L = {L} m",
+                spaceTimeTitle: "Không gian - thời gian",
+                spaceTimeSubtitle: "x theo frame, vòng cam = hard-body stop",
+                motionDirection: "chiều chuyển động +x",
+                frontGapLabel: "s = {distance} m ({ratio}x d_i)",
+                positionAxis: "vị trí x [m]",
+                timeAxis: "thời gian",
+            },
+            en: {
+                pageTitle: "Mathematical Modeling Project",
+                eyebrow: "Mathematical Modeling Project",
+                title: "Periodic 1D Pedestrian Flow Simulation",
+                subhead: "The front pedestrian of i is i+1, and front distance is computed modulo L.",
+                interactionMode: "Interaction mode",
+                remoteMode: "Remote action",
+                hardBodyMode: "Hard-body only",
+                modelSection: "Model",
+                remoteButton: "Remote",
+                hardBodyButton: "Hard-body",
+                parametersSection: "Parameters",
+                peopleCount: "Pedestrians N",
+                corridorLength: "Corridor length L",
+                coefficientB: "Coefficient b",
+                desiredVelocity: "Desired velocity",
+                relaxationTime: "Relaxation time",
+                remoteStrength: "Remote strength e",
+                demoSpeed: "Demo speed",
+                stepsPerFrame: "steps/frame",
+                controlsSection: "Controls",
+                pauseButton: "Pause",
+                resumeButton: "Resume",
+                stepButton: "Step",
+                resetButton: "Reset",
+                densityMetric: "Density",
+                meanVelocityMetric: "Mean velocity",
+                minGapMetric: "Min gap",
+                blockedMetric: "Blocked",
+                corridorTitle: "Periodic corridor L = {L} m",
+                spaceTimeTitle: "Space-time plot",
+                spaceTimeSubtitle: "x by frame, orange rings = hard-body stops",
+                motionDirection: "motion direction +x",
+                frontGapLabel: "s = {distance} m ({ratio}x d_i)",
+                positionAxis: "position x [m]",
+                timeAxis: "time",
+            },
+        };
+
+        let currentLanguage = "vi";
         let N = 21;
+        let L = 17.3;
         let b = 0.56;
         let tau = 0.61;
         let e = 0.07;
@@ -510,6 +632,8 @@
         let v0 = [];
         let blockedState = [];
         let history = [];
+        let kinkHistory = [];
+        let pendingKinkEvents = [];
 
         const $ = (id) => document.getElementById(id);
         const corridorCanvas = $("corridorCanvas");
@@ -518,7 +642,10 @@
         const spaceTimeCtx = spaceTimeCanvas.getContext("2d");
 
         const controls = {
+            langVi: $("langVi"),
+            langEn: $("langEn"),
             paramN: $("paramN"),
+            paramL: $("paramL"),
             paramB: $("paramB"),
             paramV0: $("paramV0"),
             paramTau: $("paramTau"),
@@ -530,6 +657,29 @@
             stepButton: $("stepButton"),
             resetButton: $("resetButton"),
         };
+
+        function t(key) {
+            return translations[currentLanguage][key] || translations.vi[key] || key;
+        }
+
+        function applyLanguage() {
+            document.documentElement.lang = currentLanguage;
+            document.title = t("pageTitle");
+            document.querySelectorAll("[data-i18n]").forEach((element) => {
+                element.textContent = t(element.dataset.i18n);
+            });
+            controls.langVi.classList.toggle("active", currentLanguage === "vi");
+            controls.langEn.classList.toggle("active", currentLanguage === "en");
+            $("resetButton").textContent = t("resetButton");
+            setRemoteMode(useRemote);
+            syncFromInputs();
+            if (x.length === N) {
+                updateMetrics();
+                draw();
+            } else {
+                $("playButton").textContent = isPlaying ? t("pauseButton") : t("resumeButton");
+            }
+        }
 
         function resizeCanvas(canvas) {
             const dpr = window.devicePixelRatio || 1;
@@ -577,14 +727,27 @@
             return a + b * velocity;
         }
 
+        function formatFrontGapLabel(gap, needed) {
+            const ratio = needed > 1e-9 ? gap / needed : 0;
+            return t("frontGapLabel")
+                .replace("{distance}", gap.toFixed(2))
+                .replace("{ratio}", ratio.toFixed(1));
+        }
+
         function setRemoteMode(enabled) {
             useRemote = enabled;
             controls.remoteOn.classList.toggle("active", enabled);
             controls.remoteOff.classList.toggle("active", !enabled);
-            $("modeLabel").textContent = enabled ? "Remote action" : "Hard-body only";
+            $("modeLabel").textContent = enabled ? t("remoteMode") : t("hardBodyMode");
         }
 
         function syncFromInputs() {
+            L = Number.parseFloat(controls.paramL.value);
+            const maxPedestrians = Math.max(2, Math.floor((L - 0.05) / a));
+            controls.paramN.max = String(maxPedestrians);
+            if (Number.parseInt(controls.paramN.value, 10) > maxPedestrians) {
+                controls.paramN.value = String(maxPedestrians);
+            }
             N = Number.parseInt(controls.paramN.value, 10);
             b = Number.parseFloat(controls.paramB.value);
             tau = Number.parseFloat(controls.paramTau.value);
@@ -593,12 +756,14 @@
             stepsPerFrame = Number.parseInt(controls.paramSpeed.value, 10);
 
             $("outN").textContent = String(N);
+            $("outL").textContent = `${L.toFixed(1)} m`;
             $("outB").textContent = b.toFixed(2);
             $("outV0").textContent = `${baseV0.toFixed(2)} m/s`;
             $("outTau").textContent = `${tau.toFixed(2)} s`;
             $("outE").textContent = e.toFixed(2);
-            $("outSpeed").textContent = `${stepsPerFrame} bước/frame`;
+            $("outSpeed").textContent = `${stepsPerFrame} ${t("stepsPerFrame")}`;
             $("metricDensity").textContent = `${(N / L).toFixed(2)} /m`;
+            $("corridorTitle").textContent = t("corridorTitle").replace("{L}", L.toFixed(1));
         }
 
         function initialPositionsWithMinimumGap() {
@@ -627,6 +792,8 @@
             v0 = [];
             blockedState = new Array(N).fill(false);
             history = [];
+            kinkHistory = [];
+            pendingKinkEvents = [];
             elapsedSteps = 0;
             blockedLastStep = 0;
 
@@ -674,6 +841,9 @@
                 nextV[i] = 0;
                 nextX[i] = oldX[i];
                 blocked[i] = true;
+                if (!useRemote && !pendingKinkEvents.some((event) => event.index === i)) {
+                    pendingKinkEvents.push({ index: i, position: nextX[i] });
+                }
                 pending.push(followerIndex(i));
             }
 
@@ -697,8 +867,11 @@
 
             if (elapsedSteps % 16 === 0) {
                 history.push([...x]);
+                kinkHistory.push([...pendingKinkEvents]);
+                pendingKinkEvents = [];
                 if (history.length > maxHistory) {
                     history.shift();
+                    kinkHistory.shift();
                 }
             }
 
@@ -720,7 +893,7 @@
             $("metricGap").textContent = `${minGap().toFixed(2)} m`;
             $("metricBlocked").textContent = String(blockedLastStep);
             $("stepReadout").textContent = `t = ${(elapsedSteps * dt).toFixed(3)} s`;
-            $("playButton").textContent = isPlaying ? "Tạm dừng" : "Tiếp tục";
+            $("playButton").textContent = isPlaying ? t("pauseButton") : t("resumeButton");
         }
 
         function drawArrow(ctx, x0, y0, x1, y1, color) {
@@ -738,6 +911,47 @@
             ctx.lineTo(x1 - 7 * Math.cos(angle + Math.PI / 6), y1 - 7 * Math.sin(angle + Math.PI / 6));
             ctx.closePath();
             ctx.fill();
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function drawRoundedRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function drawGapLabel(ctx, label, centerX, centerY, minX, maxX) {
+            ctx.save();
+            ctx.font = "11px sans-serif";
+            const paddingX = 7;
+            const boxW = ctx.measureText(label).width + paddingX * 2;
+            const boxH = 20;
+            const x0 = clamp(centerX - boxW / 2, minX, maxX - boxW);
+            const y0 = centerY - boxH / 2;
+
+            ctx.fillStyle = "rgba(255, 253, 248, 0.94)";
+            ctx.strokeStyle = "rgba(225, 29, 72, 0.32)";
+            ctx.lineWidth = 1;
+            drawRoundedRect(ctx, x0, y0, boxW, boxH, 7);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = colors.coral;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, x0 + boxW / 2, centerY + 0.5);
+            ctx.restore();
         }
 
         function drawCorridor() {
@@ -774,7 +988,7 @@
             corridorCtx.fillStyle = colors.muted;
             corridorCtx.font = "12px sans-serif";
             corridorCtx.textAlign = "right";
-            corridorCtx.fillText("chiều chuyển động +x", width - padX - 72, trackY - 44);
+            corridorCtx.fillText(t("motionDirection"), width - padX - 72, trackY - 44);
 
             for (let i = 0; i < N; i++) {
                 const px = padX + (x[i] / L) * trackW;
@@ -783,7 +997,10 @@
 
                 if (i === highlight) {
                     const gap = distanceToFront(i, x);
+                    const needed = requiredLength(v[i]);
+                    const label = formatFrontGapLabel(gap, needed);
                     const gapEnd = padX + (wrapPosition(x[i] + gap) / L) * trackW;
+                    let labelCenterX;
                     corridorCtx.strokeStyle = colors.coral;
                     corridorCtx.lineWidth = 2;
                     corridorCtx.setLineDash([5, 5]);
@@ -791,14 +1008,21 @@
                     if (gapEnd >= px) {
                         corridorCtx.moveTo(px, trackY + 40);
                         corridorCtx.lineTo(gapEnd, trackY + 40);
+                        labelCenterX = (px + gapEnd) / 2;
                     } else {
                         corridorCtx.moveTo(px, trackY + 40);
                         corridorCtx.lineTo(width - padX, trackY + 40);
                         corridorCtx.moveTo(padX, trackY + 40);
                         corridorCtx.lineTo(gapEnd, trackY + 40);
+                        const rightSegment = width - padX - px;
+                        const leftSegment = gapEnd - padX;
+                        labelCenterX = rightSegment >= leftSegment
+                            ? px + rightSegment / 2
+                            : padX + leftSegment / 2;
                     }
                     corridorCtx.stroke();
                     corridorCtx.setLineDash([]);
+                    drawGapLabel(corridorCtx, label, labelCenterX, trackY + 58, padX, width - padX);
                 }
 
                 corridorCtx.fillStyle = blockedState[i] ? colors.amber : (isHighlight ? colors.coral : colors.teal);
@@ -836,11 +1060,11 @@
             spaceTimeCtx.fillStyle = colors.muted;
             spaceTimeCtx.font = "12px sans-serif";
             spaceTimeCtx.textAlign = "center";
-            spaceTimeCtx.fillText("vị trí x [m]", left + plotW / 2, height - 10);
+            spaceTimeCtx.fillText(t("positionAxis"), left + plotW / 2, height - 10);
             spaceTimeCtx.save();
             spaceTimeCtx.translate(14, top + plotH / 2);
             spaceTimeCtx.rotate(-Math.PI / 2);
-            spaceTimeCtx.fillText("thời gian", 0, 0);
+            spaceTimeCtx.fillText(t("timeAxis"), 0, 0);
             spaceTimeCtx.restore();
 
             for (let tick = 0; tick <= L; tick += 2) {
@@ -868,6 +1092,17 @@
                         spaceTimeCtx.stroke();
                     }
                 }
+
+                const kinkEvents = kinkHistory[tIndex] || [];
+                kinkEvents.forEach((event) => {
+                    const px = left + (event.position / L) * plotW;
+                    spaceTimeCtx.strokeStyle = colors.amber;
+                    spaceTimeCtx.lineWidth = 1.8;
+                    spaceTimeCtx.beginPath();
+                    spaceTimeCtx.arc(px, py, 6.2, 0, Math.PI * 2);
+                    spaceTimeCtx.stroke();
+                    spaceTimeCtx.lineWidth = 1;
+                });
             });
         }
 
@@ -886,9 +1121,18 @@
             requestAnimationFrame(animate);
         }
 
+        controls.langVi.addEventListener("click", () => {
+            currentLanguage = "vi";
+            applyLanguage();
+        });
+        controls.langEn.addEventListener("click", () => {
+            currentLanguage = "en";
+            applyLanguage();
+        });
         controls.remoteOn.addEventListener("click", () => setRemoteMode(true));
         controls.remoteOff.addEventListener("click", () => setRemoteMode(false));
         controls.paramN.addEventListener("input", initSimulation);
+        controls.paramL.addEventListener("input", initSimulation);
         controls.paramV0.addEventListener("input", initSimulation);
         controls.paramB.addEventListener("input", () => { syncFromInputs(); });
         controls.paramTau.addEventListener("input", () => { syncFromInputs(); });
@@ -912,6 +1156,7 @@
 
         setRemoteMode(true);
         initSimulation();
+        applyLanguage();
         resizeAll();
         animate();
     </script>
