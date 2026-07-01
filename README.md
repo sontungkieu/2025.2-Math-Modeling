@@ -112,7 +112,7 @@ http://127.0.0.1:8765/interactive_demo.html
 ```
 
 In VS Code on WSL, run `Simple Browser: Show` from the command palette and paste the same URL. If port `8765` is already used, replace it with another free port such as `8766`.
-Use the VI/EN toggle in the demo header to switch the interface language. The red dashed segment shows the highlighted pedestrian's front gap as an absolute distance `s` and as a ratio `s/d_i` to the required hard-body length. In Hard-body mode, orange rings in the space-time plot mark pedestrians whose step was stopped and rolled back by the hard-body constraint.
+Use the VI/EN toggle in the demo header to switch the interface language. Reset restarts the current parameter set from the same deterministic `t = 0` state, and Step advances one rendered frame using the current steps/frame speed. The red dashed segment shows the highlighted pedestrian's front gap as an absolute distance `s` and as a ratio `s/d_i` to the required hard-body length. In Hard-body mode, orange rings in the space-time plot mark pedestrians whose step was stopped and rolled back by the hard-body constraint.
 
 ### Running Tests
 

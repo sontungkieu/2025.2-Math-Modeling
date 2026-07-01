@@ -341,7 +341,7 @@
         }
 
         #corridorCanvas {
-            height: 220px;
+            height: 120px;
         }
 
         #spaceTimeCanvas {
@@ -395,7 +395,7 @@
             }
 
             #corridorCanvas {
-                height: 180px;
+                height: 100px;
             }
 
             #spaceTimeCanvas {
@@ -410,7 +410,7 @@
             <div>
                 <p class="eyebrow" data-i18n="eyebrow">Mathematical Modeling Project</p>
                 <h1 data-i18n="title">Mô phỏng dòng người đi bộ trong hành lang tuần hoàn</h1>
-                <p class="subhead" data-i18n="subhead">Mô hình 1D dùng quy ước người phía trước của i là i+1, khoảng cách được tính modulo L.</p>
+                <p class="subhead" data-i18n="subhead">So sánh tương tác từ xa và ràng buộc vật thể cứng trong hành lang tuần hoàn.</p>
             </div>
             <div class="top-actions">
                 <div class="language-switch" role="group" aria-label="Language">
@@ -470,7 +470,7 @@
                     <h2 class="section-title" data-i18n="controlsSection">Điều khiển</h2>
                     <div class="buttons">
                         <button class="btn primary" id="playButton" type="button">Tạm dừng</button>
-                        <button class="btn icon" id="stepButton" type="button" data-i18n="stepButton">Bước tiếp</button>
+                        <button class="btn icon" id="stepButton" type="button" data-i18n="stepButton">Bước 1 frame</button>
                         <button class="btn reset" id="resetButton" type="button">Reset</button>
                     </div>
                 </section>
@@ -542,7 +542,7 @@
                 pageTitle: "Mathematical Modeling Project",
                 eyebrow: "Mathematical Modeling Project",
                 title: "Mô phỏng dòng người đi bộ trong hành lang tuần hoàn",
-                subhead: "Mô hình 1D dùng quy ước người phía trước của i là i+1, khoảng cách được tính modulo L.",
+                subhead: "So sánh tương tác từ xa và ràng buộc vật thể cứng trong hành lang tuần hoàn.",
                 interactionMode: "Chế độ tương tác",
                 remoteMode: "Tương tác từ xa",
                 hardBodyMode: "Chỉ vật thể cứng",
@@ -561,7 +561,7 @@
                 controlsSection: "Điều khiển",
                 pauseButton: "Tạm dừng",
                 resumeButton: "Tiếp tục",
-                stepButton: "Bước tiếp",
+                stepButton: "Bước 1 frame",
                 resetButton: "Reset",
                 densityMetric: "Mật độ",
                 meanVelocityMetric: "Vận tốc TB",
@@ -579,7 +579,7 @@
                 pageTitle: "Mathematical Modeling Project",
                 eyebrow: "Mathematical Modeling Project",
                 title: "Periodic 1D Pedestrian Flow Simulation",
-                subhead: "The front pedestrian of i is i+1, and front distance is computed modulo L.",
+                subhead: "Compare remote action and hard-body constraints in a periodic corridor.",
                 interactionMode: "Interaction mode",
                 remoteMode: "Remote action",
                 hardBodyMode: "Hard-body only",
@@ -598,7 +598,7 @@
                 controlsSection: "Controls",
                 pauseButton: "Pause",
                 resumeButton: "Resume",
-                stepButton: "Step",
+                stepButton: "Step frame",
                 resetButton: "Reset",
                 densityMetric: "Density",
                 meanVelocityMetric: "Mean velocity",
@@ -625,7 +625,6 @@
         let useRemote = true;
         let isPlaying = true;
         let elapsedSteps = 0;
-        let resetNonce = 0;
         let blockedLastStep = 0;
         let x = [];
         let v = [];
@@ -702,8 +701,8 @@
         }
 
         function seededNormal(i) {
-            const u1 = Math.max(seededUnit(2 * i + 17, resetNonce), 1e-9);
-            const u2 = seededUnit(2 * i + 18, resetNonce);
+            const u1 = Math.max(seededUnit(2 * i + 17), 1e-9);
+            const u2 = seededUnit(2 * i + 18);
             return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
         }
 
@@ -771,13 +770,13 @@
             const weights = [];
             let weightSum = 0;
             for (let i = 0; i < N; i++) {
-                const weight = -Math.log(Math.max(1e-9, 1 - seededUnit(i + 101, resetNonce)));
+                const weight = -Math.log(Math.max(1e-9, 1 - seededUnit(i + 101)));
                 weights.push(weight);
                 weightSum += weight;
             }
 
             const gaps = weights.map((weight) => a + freeLength * weight / weightSum);
-            const start = seededUnit(777, resetNonce) * L;
+            const start = seededUnit(777) * L;
             const positions = [start];
             for (let i = 1; i < N; i++) {
                 positions.push(wrapPosition(positions[i - 1] + gaps[i - 1]));
@@ -879,6 +878,12 @@
             updateMetrics();
         }
 
+        function stepFrame() {
+            for (let i = 0; i < stepsPerFrame; i++) {
+                stepSimulation();
+            }
+        }
+
         function minGap() {
             let result = Infinity;
             for (let i = 0; i < N; i++) {
@@ -959,8 +964,12 @@
             const width = rect.width;
             const height = rect.height;
             const padX = 34;
-            const trackY = height * 0.54;
+            const trackY = height * 0.46;
             const trackW = width - padX * 2;
+            const guideOffset = 22;
+            const arrowY = trackY - 30;
+            const gapY = trackY + 28;
+            const labelY = Math.min(height - 14, gapY + 16);
             const highlight = Math.floor(N / 2);
 
             corridorCtx.clearRect(0, 0, width, height);
@@ -978,17 +987,17 @@
             corridorCtx.strokeStyle = colors.line;
             corridorCtx.lineWidth = 1;
             corridorCtx.beginPath();
-            corridorCtx.moveTo(padX, trackY - 28);
-            corridorCtx.lineTo(width - padX, trackY - 28);
-            corridorCtx.moveTo(padX, trackY + 28);
-            corridorCtx.lineTo(width - padX, trackY + 28);
+            corridorCtx.moveTo(padX, trackY - guideOffset);
+            corridorCtx.lineTo(width - padX, trackY - guideOffset);
+            corridorCtx.moveTo(padX, trackY + guideOffset);
+            corridorCtx.lineTo(width - padX, trackY + guideOffset);
             corridorCtx.stroke();
 
-            drawArrow(corridorCtx, width - padX - 62, trackY - 48, width - padX - 14, trackY - 48, colors.amber);
+            drawArrow(corridorCtx, width - padX - 62, arrowY, width - padX - 14, arrowY, colors.amber);
             corridorCtx.fillStyle = colors.muted;
             corridorCtx.font = "12px sans-serif";
             corridorCtx.textAlign = "right";
-            corridorCtx.fillText(t("motionDirection"), width - padX - 72, trackY - 44);
+            corridorCtx.fillText(t("motionDirection"), width - padX - 72, arrowY + 4);
 
             for (let i = 0; i < N; i++) {
                 const px = padX + (x[i] / L) * trackW;
@@ -1006,14 +1015,14 @@
                     corridorCtx.setLineDash([5, 5]);
                     corridorCtx.beginPath();
                     if (gapEnd >= px) {
-                        corridorCtx.moveTo(px, trackY + 40);
-                        corridorCtx.lineTo(gapEnd, trackY + 40);
+                        corridorCtx.moveTo(px, gapY);
+                        corridorCtx.lineTo(gapEnd, gapY);
                         labelCenterX = (px + gapEnd) / 2;
                     } else {
-                        corridorCtx.moveTo(px, trackY + 40);
-                        corridorCtx.lineTo(width - padX, trackY + 40);
-                        corridorCtx.moveTo(padX, trackY + 40);
-                        corridorCtx.lineTo(gapEnd, trackY + 40);
+                        corridorCtx.moveTo(px, gapY);
+                        corridorCtx.lineTo(width - padX, gapY);
+                        corridorCtx.moveTo(padX, gapY);
+                        corridorCtx.lineTo(gapEnd, gapY);
                         const rightSegment = width - padX - px;
                         const leftSegment = gapEnd - padX;
                         labelCenterX = rightSegment >= leftSegment
@@ -1022,7 +1031,7 @@
                     }
                     corridorCtx.stroke();
                     corridorCtx.setLineDash([]);
-                    drawGapLabel(corridorCtx, label, labelCenterX, trackY + 58, padX, width - padX);
+                    drawGapLabel(corridorCtx, label, labelCenterX, labelY, padX, width - padX);
                 }
 
                 corridorCtx.fillStyle = blockedState[i] ? colors.amber : (isHighlight ? colors.coral : colors.teal);
@@ -1113,9 +1122,7 @@
 
         function animate() {
             if (isPlaying) {
-                for (let i = 0; i < stepsPerFrame; i++) {
-                    stepSimulation();
-                }
+                stepFrame();
             }
             draw();
             requestAnimationFrame(animate);
@@ -1144,12 +1151,11 @@
         });
         controls.stepButton.addEventListener("click", () => {
             if (!isPlaying) {
-                stepSimulation();
+                stepFrame();
                 draw();
             }
         });
         controls.resetButton.addEventListener("click", () => {
-            resetNonce += 1;
             initSimulation();
         });
         window.addEventListener("resize", resizeAll);
