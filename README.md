@@ -16,6 +16,8 @@ This project implements and analyzes a microscopic model of pedestrian flow base
 - `model.py` — Core simulation logic and model implementation.
 - `utils.py` — Plotting and analysis utilities.
 - `plot_figures.py` — Generates modern and paper-style figures from experiment CSV outputs.
+- `interactive_demo.html` — Browser-based interactive demo for the 1D periodic corridor model.
+- `docs/assets/` — README images and other documentation assets.
 - `output/` — Directory for generated CSV and PNG files.
 
 ## Model Convention
@@ -92,6 +94,24 @@ Generate only selected experiments or styles:
 ```bash
 uv run python plot_figures.py --experiments exp1 exp3 --styles paper
 ```
+
+### Interactive Demo
+
+![Interactive pedestrian-flow demo](docs/assets/interactive_demo.png)
+
+Open `interactive_demo.html` directly in a browser, or serve the repository with a local static server:
+
+```bash
+uv run python -m http.server 8765 --bind 0.0.0.0
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765/interactive_demo.html
+```
+
+In VS Code on WSL, run `Simple Browser: Show` from the command palette and paste the same URL. If port `8765` is already used, replace it with another free port such as `8766`.
 
 ### Running Tests
 

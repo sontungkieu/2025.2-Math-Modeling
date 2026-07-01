@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedestrian Flow Lab</title>
+    <style>
+        :root {
+            --bg: #f7f4ee;
+            --surface: #fffdf8;
+            --surface-2: #f1ece2;
+            --ink: #1f2933;
+            --muted: #667085;
+            --line: #d7d0c4;
+            --teal: #0f766e;
+            --teal-soft: #d8f3ef;
+            --coral: #e11d48;
+            --amber: #d97706;
+            --blue: #2563eb;
+            --shadow: 0 18px 44px rgba(31, 41, 51, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            background: var(--bg);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        .app {
+            width: min(1280px, calc(100vw - 32px));
+            margin: 0 auto;
+            padding: 24px 0 32px;
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: end;
+            margin-bottom: 18px;
+        }
+
+        .eyebrow {
+            margin: 0 0 6px;
+            color: var(--teal);
+            font-size: 0.78rem;
+            font-weight: 760;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            max-width: 780px;
+            font-size: clamp(1.8rem, 3.5vw, 3.6rem);
+            line-height: 1.02;
+            letter-spacing: 0;
+        }
+
+        .subhead {
+            margin: 10px 0 0;
+            max-width: 760px;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .mode-chip {
+            display: grid;
+            gap: 6px;
+            justify-items: end;
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        .mode-chip strong {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            padding: 6px 10px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: var(--ink);
+            background: var(--surface);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        .controls,
+        .stage-panel,
+        .metrics {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: var(--shadow);
+        }
+
+        .controls {
+            padding: 16px;
+            display: grid;
+            gap: 16px;
+            align-content: start;
+        }
+
+        .section {
+            display: grid;
+            gap: 12px;
+        }
+
+        .section-title {
+            margin: 0;
+            color: var(--ink);
+            font-size: 0.78rem;
+            font-weight: 780;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .segmented {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px;
+            padding: 4px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface-2);
+        }
+
+        .segment {
+            min-height: 36px;
+            border: 0;
+            border-radius: 6px;
+            color: var(--muted);
+            background: transparent;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .segment.active {
+            color: #ffffff;
+            background: var(--teal);
+        }
+
+        .control {
+            display: grid;
+            gap: 7px;
+        }
+
+        .control label {
+            display: flex;
+            justify-content: space-between;
+            gap: 14px;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .control output {
+            color: var(--ink);
+            font-weight: 760;
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            appearance: none;
+            border-radius: 999px;
+            outline: none;
+            background: var(--surface-2);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            width: 17px;
+            height: 17px;
+            appearance: none;
+            border: 3px solid var(--surface);
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.35);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 17px;
+            height: 17px;
+            border: 3px solid var(--surface);
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.35);
+            cursor: pointer;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 44px 44px;
+            gap: 8px;
+        }
+
+        .btn {
+            min-height: 42px;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 760;
+        }
+
+        .btn.primary {
+            color: #ffffff;
+            background: var(--ink);
+        }
+
+        .btn.icon {
+            color: var(--ink);
+            border-color: var(--line);
+            background: var(--surface);
+        }
+
+        .btn:hover {
+            filter: brightness(0.97);
+        }
+
+        .stage {
+            display: grid;
+            gap: 12px;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            overflow: hidden;
+            box-shadow: none;
+        }
+
+        .metric {
+            min-width: 0;
+            padding: 12px 14px;
+            border-right: 1px solid var(--line);
+        }
+
+        .metric:last-child {
+            border-right: 0;
+        }
+
+        .metric span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 1.18rem;
+            line-height: 1.1;
+        }
+
+        .stage-panel {
+            overflow: hidden;
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            background: #fffaf0;
+        }
+
+        .panel-head h2 {
+            margin: 0;
+            font-size: 0.94rem;
+            line-height: 1.2;
+        }
+
+        .panel-head span {
+            color: var(--muted);
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .canvas-wrap {
+            padding: 12px;
+            background: var(--surface);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fffdf8;
+        }
+
+        #corridorCanvas {
+            height: 220px;
+        }
+
+        #spaceTimeCanvas {
+            height: 360px;
+        }
+
+        @media (max-width: 940px) {
+            .topbar,
+            .layout {
+                grid-template-columns: 1fr;
+            }
+
+            .mode-chip {
+                justify-items: start;
+            }
+
+            .metrics {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .metric:nth-child(2) {
+                border-right: 0;
+            }
+
+            .metric:nth-child(-n + 2) {
+                border-bottom: 1px solid var(--line);
+            }
+        }
+
+        @media (max-width: 560px) {
+            .app {
+                width: min(100vw - 20px, 1280px);
+                padding-top: 14px;
+            }
+
+            .controls {
+                padding: 12px;
+            }
+
+            .panel-head {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .panel-head span {
+                white-space: normal;
+            }
+
+            #corridorCanvas {
+                height: 180px;
+            }
+
+            #spaceTimeCanvas {
+                height: 320px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app">
+        <header class="topbar">
+            <div>
+                <p class="eyebrow">Pedestrian Flow Lab</p>
+                <h1>Mô phỏng dòng người đi bộ trong hành lang tuần hoàn</h1>
+                <p class="subhead">Mô hình 1D dùng quy ước người phía trước của i là i+1, khoảng cách được tính modulo L.</p>
+            </div>
+            <div class="mode-chip">
+                <span>Interaction mode</span>
+                <strong id="modeLabel">Remote action</strong>
+            </div>
+        </header>
+
+        <div class="layout">
+            <aside class="controls" aria-label="Bảng điều khiển mô phỏng">
+                <section class="section">
+                    <h2 class="section-title">Mô hình</h2>
+                    <div class="segmented" role="group" aria-label="Chọn loại tương tác">
+                        <button class="segment active" id="remoteOn" type="button">Remote</button>
+                        <button class="segment" id="remoteOff" type="button">Hard-body</button>
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Tham số</h2>
+                    <div class="control">
+                        <label for="paramN">Số người N <output id="outN">21</output></label>
+                        <input id="paramN" type="range" min="2" max="43" value="21">
+                    </div>
+                    <div class="control">
+                        <label for="paramB">Hệ số b <output id="outB">0.56</output></label>
+                        <input id="paramB" type="range" min="0" max="1.5" step="0.05" value="0.56">
+                    </div>
+                    <div class="control">
+                        <label for="paramV0">Vận tốc mong muốn <output id="outV0">1.24 m/s</output></label>
+                        <input id="paramV0" type="range" min="0.5" max="2" step="0.05" value="1.24">
+                    </div>
+                    <div class="control">
+                        <label for="paramTau">Thời gian thư giãn <output id="outTau">0.61 s</output></label>
+                        <input id="paramTau" type="range" min="0.1" max="2" step="0.05" value="0.61">
+                    </div>
+                    <div class="control">
+                        <label for="paramE">Cường độ e <output id="outE">0.07</output></label>
+                        <input id="paramE" type="range" min="0.01" max="0.3" step="0.01" value="0.07">
+                    </div>
+                    <div class="control">
+                        <label for="paramSpeed">Tốc độ demo <output id="outSpeed">25 bước/frame</output></label>
+                        <input id="paramSpeed" type="range" min="1" max="80" step="1" value="25">
+                    </div>
+                </section>
+
+                <section class="section">
+                    <h2 class="section-title">Điều khiển</h2>
+                    <div class="buttons">
+                        <button class="btn primary" id="playButton" type="button">Tạm dừng</button>
+                        <button class="btn icon" id="stepButton" type="button" aria-label="Bước tiếp">›</button>
+                        <button class="btn icon" id="resetButton" type="button" aria-label="Khởi động lại">↺</button>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="stage">
+                <div class="metrics" aria-label="Chỉ số mô phỏng">
+                    <div class="metric">
+                        <span>Mật độ</span>
+                        <strong id="metricDensity">1.21 /m</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Vận tốc TB</span>
+                        <strong id="metricVelocity">0.00 m/s</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Khoảng cách min</span>
+                        <strong id="metricGap">0.36 m</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Bị chặn</span>
+                        <strong id="metricBlocked">0</strong>
+                    </div>
+                </div>
+
+                <article class="stage-panel">
+                    <div class="panel-head">
+                        <h2>Hành lang tuần hoàn L = 17.3 m</h2>
+                        <span id="stepReadout">t = 0.000 s</span>
+                    </div>
+                    <div class="canvas-wrap">
+                        <canvas id="corridorCanvas"></canvas>
+                    </div>
+                </article>
+
+                <article class="stage-panel">
+                    <div class="panel-head">
+                        <h2>Không gian - thời gian</h2>
+                        <span>x theo frame, người được theo dõi màu coral</span>
+                    </div>
+                    <div class="canvas-wrap">
+                        <canvas id="spaceTimeCanvas"></canvas>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        const L = 17.3;
+        const dt = 0.001;
+        const a = 0.36;
+        const f = 2.0;
+        const maxHistory = 170;
+        const colors = {
+            ink: "#1f2933",
+            muted: "#667085",
+            line: "#d7d0c4",
+            track: "#e7dfd1",
+            teal: "#0f766e",
+            tealSoft: "#d8f3ef",
+            coral: "#e11d48",
+            amber: "#d97706",
+            blue: "#2563eb",
+            surface: "#fffdf8",
+        };
+
+        let N = 21;
+        let b = 0.56;
+        let tau = 0.61;
+        let e = 0.07;
+        let baseV0 = 1.24;
+        let stepsPerFrame = 25;
+        let useRemote = true;
+        let isPlaying = true;
+        let elapsedSteps = 0;
+        let resetNonce = 0;
+        let blockedLastStep = 0;
+        let x = [];
+        let v = [];
+        let v0 = [];
+        let blockedState = [];
+        let history = [];
+
+        const $ = (id) => document.getElementById(id);
+        const corridorCanvas = $("corridorCanvas");
+        const spaceTimeCanvas = $("spaceTimeCanvas");
+        const corridorCtx = corridorCanvas.getContext("2d");
+        const spaceTimeCtx = spaceTimeCanvas.getContext("2d");
+
+        const controls = {
+            paramN: $("paramN"),
+            paramB: $("paramB"),
+            paramV0: $("paramV0"),
+            paramTau: $("paramTau"),
+            paramE: $("paramE"),
+            paramSpeed: $("paramSpeed"),
+            remoteOn: $("remoteOn"),
+            remoteOff: $("remoteOff"),
+            playButton: $("playButton"),
+            stepButton: $("stepButton"),
+            resetButton: $("resetButton"),
+        };
+
+        function resizeCanvas(canvas) {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = Math.max(1, Math.round(rect.width * dpr));
+            canvas.height = Math.max(1, Math.round(rect.height * dpr));
+            const ctx = canvas.getContext("2d");
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        function resizeAll() {
+            resizeCanvas(corridorCanvas);
+            resizeCanvas(spaceTimeCanvas);
+            draw();
+        }
+
+        function seededUnit(i, salt = 0) {
+            const raw = Math.sin((i + 1 + salt * 997.3) * 12.9898) * 43758.5453;
+            return raw - Math.floor(raw);
+        }
+
+        function seededNormal(i) {
+            const u1 = Math.max(seededUnit(2 * i + 17, resetNonce), 1e-9);
+            const u2 = seededUnit(2 * i + 18, resetNonce);
+            return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        }
+
+        function wrapPosition(value) {
+            return ((value % L) + L) % L;
+        }
+
+        function frontIndex(i) {
+            return (i + 1) % N;
+        }
+
+        function followerIndex(i) {
+            return (i + N - 1) % N;
+        }
+
+        function distanceToFront(i, positions) {
+            return wrapPosition(positions[frontIndex(i)] - positions[i]);
+        }
+
+        function requiredLength(velocity) {
+            return a + b * velocity;
+        }
+
+        function setRemoteMode(enabled) {
+            useRemote = enabled;
+            controls.remoteOn.classList.toggle("active", enabled);
+            controls.remoteOff.classList.toggle("active", !enabled);
+            $("modeLabel").textContent = enabled ? "Remote action" : "Hard-body only";
+        }
+
+        function syncFromInputs() {
+            N = Number.parseInt(controls.paramN.value, 10);
+            b = Number.parseFloat(controls.paramB.value);
+            tau = Number.parseFloat(controls.paramTau.value);
+            e = Number.parseFloat(controls.paramE.value);
+            baseV0 = Number.parseFloat(controls.paramV0.value);
+            stepsPerFrame = Number.parseInt(controls.paramSpeed.value, 10);
+
+            $("outN").textContent = String(N);
+            $("outB").textContent = b.toFixed(2);
+            $("outV0").textContent = `${baseV0.toFixed(2)} m/s`;
+            $("outTau").textContent = `${tau.toFixed(2)} s`;
+            $("outE").textContent = e.toFixed(2);
+            $("outSpeed").textContent = `${stepsPerFrame} bước/frame`;
+            $("metricDensity").textContent = `${(N / L).toFixed(2)} /m`;
+        }
+
+        function initialPositionsWithMinimumGap() {
+            const freeLength = Math.max(0, L - N * a);
+            const weights = [];
+            let weightSum = 0;
+            for (let i = 0; i < N; i++) {
+                const weight = -Math.log(Math.max(1e-9, 1 - seededUnit(i + 101, resetNonce)));
+                weights.push(weight);
+                weightSum += weight;
+            }
+
+            const gaps = weights.map((weight) => a + freeLength * weight / weightSum);
+            const start = seededUnit(777, resetNonce) * L;
+            const positions = [start];
+            for (let i = 1; i < N; i++) {
+                positions.push(wrapPosition(positions[i - 1] + gaps[i - 1]));
+            }
+            return positions;
+        }
+
+        function initSimulation() {
+            syncFromInputs();
+            x = initialPositionsWithMinimumGap();
+            v = [];
+            v0 = [];
+            blockedState = new Array(N).fill(false);
+            history = [];
+            elapsedSteps = 0;
+            blockedLastStep = 0;
+
+            for (let i = 0; i < N; i++) {
+                v.push(0);
+                v0.push(Math.max(0.1, baseV0 + 0.05 * seededNormal(i)));
+            }
+            updateMetrics();
+            draw();
+        }
+
+        function computeForce(i, positions, velocities) {
+            const d = requiredLength(velocities[i]);
+            const s = distanceToFront(i, positions);
+
+            if (!useRemote) {
+                return s > d ? (v0[i] - velocities[i]) / tau : -velocities[i] / dt;
+            }
+
+            const clearance = s - d;
+            const repulsion = clearance > 1e-4 ? e / Math.pow(clearance, f) : 1e5;
+            const force = (v0[i] - velocities[i]) / tau - repulsion;
+            return velocities[i] > 0 ? force : Math.max(0, force);
+        }
+
+        function enforceNoOverlap(oldX, nextX, nextV) {
+            const pending = [];
+            const blocked = new Array(N).fill(false);
+            for (let i = N - 1; i >= 0; i--) {
+                pending.push(i);
+            }
+
+            let guard = 0;
+            while (pending.length > 0 && guard < N * N * 3) {
+                guard += 1;
+                const i = pending.shift();
+                const gap = distanceToFront(i, nextX);
+                const needed = requiredLength(nextV[i]);
+                const alreadyStopped = nextV[i] === 0 && Math.abs(nextX[i] - oldX[i]) < 1e-10;
+
+                if (gap + 1e-10 >= needed || alreadyStopped) {
+                    continue;
+                }
+
+                nextV[i] = 0;
+                nextX[i] = oldX[i];
+                blocked[i] = true;
+                pending.push(followerIndex(i));
+            }
+
+            blockedState = blocked;
+            return blocked.filter(Boolean).length;
+        }
+
+        function stepSimulation() {
+            const forces = x.map((_, i) => computeForce(i, x, v));
+            const nextV = new Array(N);
+            const nextX = new Array(N);
+
+            for (let i = 0; i < N; i++) {
+                nextV[i] = Math.min(Math.max(0, v[i] + dt * forces[i]), v0[i]);
+                nextX[i] = wrapPosition(x[i] + nextV[i] * dt);
+            }
+
+            blockedLastStep = enforceNoOverlap(x, nextX, nextV);
+            x = nextX;
+            v = nextV;
+
+            if (elapsedSteps % 16 === 0) {
+                history.push([...x]);
+                if (history.length > maxHistory) {
+                    history.shift();
+                }
+            }
+
+            elapsedSteps += 1;
+            updateMetrics();
+        }
+
+        function minGap() {
+            let result = Infinity;
+            for (let i = 0; i < N; i++) {
+                result = Math.min(result, distanceToFront(i, x));
+            }
+            return result;
+        }
+
+        function updateMetrics() {
+            const meanVelocity = v.reduce((sum, value) => sum + value, 0) / Math.max(1, N);
+            $("metricVelocity").textContent = `${meanVelocity.toFixed(2)} m/s`;
+            $("metricGap").textContent = `${minGap().toFixed(2)} m`;
+            $("metricBlocked").textContent = String(blockedLastStep);
+            $("stepReadout").textContent = `t = ${(elapsedSteps * dt).toFixed(3)} s`;
+            $("playButton").textContent = isPlaying ? "Tạm dừng" : "Tiếp tục";
+        }
+
+        function drawArrow(ctx, x0, y0, x1, y1, color) {
+            const angle = Math.atan2(y1 - y0, x1 - x0);
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x1 - 7 * Math.cos(angle - Math.PI / 6), y1 - 7 * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x1 - 7 * Math.cos(angle + Math.PI / 6), y1 - 7 * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawCorridor() {
+            const rect = corridorCanvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            const padX = 34;
+            const trackY = height * 0.54;
+            const trackW = width - padX * 2;
+            const highlight = Math.floor(N / 2);
+
+            corridorCtx.clearRect(0, 0, width, height);
+            corridorCtx.fillStyle = colors.surface;
+            corridorCtx.fillRect(0, 0, width, height);
+
+            corridorCtx.strokeStyle = colors.track;
+            corridorCtx.lineWidth = 18;
+            corridorCtx.lineCap = "round";
+            corridorCtx.beginPath();
+            corridorCtx.moveTo(padX, trackY);
+            corridorCtx.lineTo(width - padX, trackY);
+            corridorCtx.stroke();
+
+            corridorCtx.strokeStyle = colors.line;
+            corridorCtx.lineWidth = 1;
+            corridorCtx.beginPath();
+            corridorCtx.moveTo(padX, trackY - 28);
+            corridorCtx.lineTo(width - padX, trackY - 28);
+            corridorCtx.moveTo(padX, trackY + 28);
+            corridorCtx.lineTo(width - padX, trackY + 28);
+            corridorCtx.stroke();
+
+            drawArrow(corridorCtx, width - padX - 62, trackY - 48, width - padX - 14, trackY - 48, colors.amber);
+            corridorCtx.fillStyle = colors.muted;
+            corridorCtx.font = "12px sans-serif";
+            corridorCtx.textAlign = "right";
+            corridorCtx.fillText("chiều chuyển động +x", width - padX - 72, trackY - 44);
+
+            for (let i = 0; i < N; i++) {
+                const px = padX + (x[i] / L) * trackW;
+                const isHighlight = i === highlight;
+                const radius = isHighlight ? 8.5 : 7;
+
+                if (i === highlight) {
+                    const gap = distanceToFront(i, x);
+                    const gapEnd = padX + (wrapPosition(x[i] + gap) / L) * trackW;
+                    corridorCtx.strokeStyle = colors.coral;
+                    corridorCtx.lineWidth = 2;
+                    corridorCtx.setLineDash([5, 5]);
+                    corridorCtx.beginPath();
+                    if (gapEnd >= px) {
+                        corridorCtx.moveTo(px, trackY + 40);
+                        corridorCtx.lineTo(gapEnd, trackY + 40);
+                    } else {
+                        corridorCtx.moveTo(px, trackY + 40);
+                        corridorCtx.lineTo(width - padX, trackY + 40);
+                        corridorCtx.moveTo(padX, trackY + 40);
+                        corridorCtx.lineTo(gapEnd, trackY + 40);
+                    }
+                    corridorCtx.stroke();
+                    corridorCtx.setLineDash([]);
+                }
+
+                corridorCtx.fillStyle = blockedState[i] ? colors.amber : (isHighlight ? colors.coral : colors.teal);
+                corridorCtx.beginPath();
+                corridorCtx.arc(px, trackY, radius, 0, Math.PI * 2);
+                corridorCtx.fill();
+
+                corridorCtx.fillStyle = colors.ink;
+                corridorCtx.font = "10px sans-serif";
+                corridorCtx.textAlign = "center";
+                corridorCtx.fillText(String(i), px, trackY - 16);
+            }
+        }
+
+        function drawSpaceTime() {
+            const rect = spaceTimeCanvas.getBoundingClientRect();
+            const width = rect.width;
+            const height = rect.height;
+            const left = 46;
+            const right = 18;
+            const top = 18;
+            const bottom = 34;
+            const plotW = width - left - right;
+            const plotH = height - top - bottom;
+            const highlight = Math.floor(N / 2);
+
+            spaceTimeCtx.clearRect(0, 0, width, height);
+            spaceTimeCtx.fillStyle = colors.surface;
+            spaceTimeCtx.fillRect(0, 0, width, height);
+
+            spaceTimeCtx.strokeStyle = colors.line;
+            spaceTimeCtx.lineWidth = 1;
+            spaceTimeCtx.strokeRect(left, top, plotW, plotH);
+
+            spaceTimeCtx.fillStyle = colors.muted;
+            spaceTimeCtx.font = "12px sans-serif";
+            spaceTimeCtx.textAlign = "center";
+            spaceTimeCtx.fillText("vị trí x [m]", left + plotW / 2, height - 10);
+            spaceTimeCtx.save();
+            spaceTimeCtx.translate(14, top + plotH / 2);
+            spaceTimeCtx.rotate(-Math.PI / 2);
+            spaceTimeCtx.fillText("thời gian", 0, 0);
+            spaceTimeCtx.restore();
+
+            for (let tick = 0; tick <= L; tick += 2) {
+                const px = left + (tick / L) * plotW;
+                spaceTimeCtx.strokeStyle = tick === 0 ? colors.line : "rgba(215, 208, 196, 0.55)";
+                spaceTimeCtx.beginPath();
+                spaceTimeCtx.moveTo(px, top);
+                spaceTimeCtx.lineTo(px, top + plotH);
+                spaceTimeCtx.stroke();
+            }
+
+            history.forEach((frame, tIndex) => {
+                const py = top + (tIndex / Math.max(1, maxHistory - 1)) * plotH;
+                for (let i = 0; i < frame.length; i++) {
+                    const px = left + (frame[i] / L) * plotW;
+                    if (i === highlight) {
+                        spaceTimeCtx.fillStyle = colors.coral;
+                        spaceTimeCtx.beginPath();
+                        spaceTimeCtx.arc(px, py, 2.4, 0, Math.PI * 2);
+                        spaceTimeCtx.fill();
+                    } else {
+                        spaceTimeCtx.strokeStyle = "rgba(15, 118, 110, 0.55)";
+                        spaceTimeCtx.beginPath();
+                        spaceTimeCtx.arc(px, py, 1.45, 0, Math.PI * 2);
+                        spaceTimeCtx.stroke();
+                    }
+                }
+            });
+        }
+
+        function draw() {
+            drawCorridor();
+            drawSpaceTime();
+        }
+
+        function animate() {
+            if (isPlaying) {
+                for (let i = 0; i < stepsPerFrame; i++) {
+                    stepSimulation();
+                }
+            }
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        controls.remoteOn.addEventListener("click", () => setRemoteMode(true));
+        controls.remoteOff.addEventListener("click", () => setRemoteMode(false));
+        controls.paramN.addEventListener("input", initSimulation);
+        controls.paramV0.addEventListener("input", initSimulation);
+        controls.paramB.addEventListener("input", () => { syncFromInputs(); });
+        controls.paramTau.addEventListener("input", () => { syncFromInputs(); });
+        controls.paramE.addEventListener("input", () => { syncFromInputs(); });
+        controls.paramSpeed.addEventListener("input", () => { syncFromInputs(); });
+        controls.playButton.addEventListener("click", () => {
+            isPlaying = !isPlaying;
+            updateMetrics();
+        });
+        controls.stepButton.addEventListener("click", () => {
+            if (!isPlaying) {
+                stepSimulation();
+                draw();
+            }
+        });
+        controls.resetButton.addEventListener("click", () => {
+            resetNonce += 1;
+            initSimulation();
+        });
+        window.addEventListener("resize", resizeAll);
+
+        setRemoteMode(true);
+        initSimulation();
+        resizeAll();
+        animate();
+    </script>
+</body>
+</html>
