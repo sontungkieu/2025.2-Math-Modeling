@@ -30,52 +30,6 @@ EXP2_SERIES = {
     (1, 0.56): ("Remote action, b = 0.56", PURPLE, "D"),
 }
 
-# Approximate points digitized from the Seyfried velocity-density reference plot
-# used in the presentation feedback. Replace with raw CSV data if it becomes
-# available.
-SEYFRIED_EMPIRICAL_POINTS = np.array(
-    [
-        (0.58, 0.96),
-        (0.62, 0.91),
-        (0.66, 0.88),
-        (0.70, 0.92),
-        (0.74, 0.86),
-        (0.78, 0.89),
-        (0.82, 0.59),
-        (0.86, 0.62),
-        (0.90, 0.94),
-        (0.94, 0.60),
-        (0.98, 0.56),
-        (1.02, 0.58),
-        (1.06, 0.62),
-        (1.10, 0.58),
-        (1.14, 0.52),
-        (1.18, 0.56),
-        (1.22, 0.48),
-        (1.26, 0.43),
-        (1.30, 0.39),
-        (1.34, 0.35),
-        (1.38, 0.32),
-        (1.42, 0.28),
-        (1.46, 0.30),
-        (1.50, 0.25),
-        (1.54, 0.22),
-        (1.58, 0.19),
-        (1.62, 0.24),
-        (1.66, 0.20),
-        (1.70, 0.16),
-        (1.74, 0.18),
-        (1.78, 0.21),
-        (1.82, 0.15),
-        (1.86, 0.19),
-        (1.90, 0.22),
-        (1.94, 0.16),
-        (1.98, 0.18),
-        (2.02, 0.14),
-    ],
-    dtype=float,
-)
-
 
 def _set_rc(style: str) -> None:
     if style == "modern":
@@ -163,21 +117,6 @@ def _configure_velocity_axes(ax: plt.Axes, xmax: float = 3.0, ymax: float = 1.35
     ax.yaxis.set_major_locator(MultipleLocator(0.2))
 
 
-def _plot_seyfried_empirical_points(ax: plt.Axes, style: str) -> None:
-    marker_size = 28 if style == "modern" else 12
-    ax.scatter(
-        SEYFRIED_EMPIRICAL_POINTS[:, 0],
-        SEYFRIED_EMPIRICAL_POINTS[:, 1],
-        s=marker_size,
-        marker="D",
-        color="#475569",
-        edgecolors="none",
-        alpha=0.72 if style == "modern" else 0.75,
-        label="Empirical (Seyfried 2005)",
-        zorder=1,
-    )
-
-
 def plot_exp1(csv_path: Path, output_prefix: Path, style: str) -> list[Path]:
     _set_rc(style)
     df = pd.read_csv(csv_path)
@@ -185,7 +124,6 @@ def plot_exp1(csv_path: Path, output_prefix: Path, style: str) -> list[Path]:
     df = df.sort_values(["b", "rho"])
 
     fig, ax = _new_figure(style)
-    _plot_seyfried_empirical_points(ax, style)
     for b in sorted(df["b"].unique()):
         sub = df[df["b"] == b]
         label, color, marker = EXP1_SERIES.get(round(float(b), 2), (f"b = {b:g}", BLUE, "o"))
@@ -289,127 +227,69 @@ def plot_exp2(csv_path: Path, output_prefix: Path, style: str) -> list[Path]:
     return _save(fig, output_prefix, style)
 
 
-def _load_position_frames(csv_path: Path) -> np.ndarray:
+def plot_exp3(csv_path: Path, output_prefix: Path, style: str, corridor_length: float, highlight_index: int) -> list[Path]:
+    _set_rc(style)
     data = np.loadtxt(csv_path, delimiter=",")
     if data.ndim == 1:
         data = data.reshape(1, -1)
-    return data
-
-
-def _plot_spacetime_panel(
-    ax: plt.Axes,
-    data: np.ndarray,
-    *,
-    title: str,
-    style: str,
-    corridor_length: float,
-    highlight_index: int,
-    compact: bool,
-    show_ylabel: bool,
-) -> None:
     frame_count, pedestrian_count = data.shape
     frame_index = np.arange(frame_count)
     highlight_index = min(max(highlight_index, 0), pedestrian_count - 1)
 
+    fig, ax = _new_figure(style)
     for pedestrian_index in range(pedestrian_count):
         if pedestrian_index == highlight_index:
             continue
         ax.scatter(
             data[:, pedestrian_index],
             frame_index,
-            s=16 if compact and style == "modern" else 24 if style == "modern" else 13,
+            s=24 if style == "modern" else 13,
             marker="o",
             facecolors="none",
-            edgecolors="#94A3B8",
-            linewidths=0.75 if compact and style == "modern" else 0.95 if style == "modern" else 0.55,
-            alpha=0.76 if style == "modern" else 0.65,
+            edgecolors=BLUE,
+            linewidths=0.95 if style == "modern" else 0.55,
+            alpha=0.68 if style == "modern" else 0.65,
             zorder=2,
         )
 
     ax.scatter(
         data[:, highlight_index],
         frame_index,
-        s=22 if compact and style == "modern" else 30 if style == "modern" else 18,
+        s=30 if style == "modern" else 18,
         marker="o",
-        color="#111827",
+        color=ORANGE,
         edgecolors="white",
-        linewidths=0.75 if compact and style == "modern" else 0.85 if style == "modern" else 0.55,
+        linewidths=0.85 if style == "modern" else 0.55,
+        label="tracked pedestrian",
         zorder=3,
-    )
-
-    ax.set_title(title, fontsize=9.6 if compact and style == "modern" else 10.5, color="#101828", pad=6)
-    ax.set_xlabel("Position x [m]", color="#101828")
-    if show_ylabel:
-        ax.set_ylabel("Frame index", color="#101828")
-    ax.set_xlim(0, corridor_length)
-    ax.set_ylim(-0.5, frame_count - 0.5)
-    ax.invert_yaxis()
-    ax.xaxis.set_major_locator(MultipleLocator(2))
-    ax.yaxis.set_major_locator(MultipleLocator(5))
-    _style_axes(ax, style, grid_alpha=0.48 if style == "modern" else 0.5)
-
-
-def _new_exp3_comparison_figure(style: str) -> tuple[plt.Figure, np.ndarray]:
-    if style == "modern":
-        fig, axes = plt.subplots(1, 2, figsize=(8.9, 4.05), dpi=180, sharey=True)
-        fig.patch.set_facecolor(BG)
-        for ax in axes:
-            ax.set_facecolor(BG)
-        return fig, axes
-
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.45), dpi=220, sharey=True)
-    fig.patch.set_facecolor("white")
-    for ax in axes:
-        ax.set_facecolor("white")
-    return fig, axes
-
-
-def plot_exp3(csv_path: Path, output_prefix: Path, style: str, corridor_length: float, highlight_index: int) -> list[Path]:
-    _set_rc(style)
-    comparison_cases = [
-        (csv_path.with_name("exp3_rho_1_16.csv"), r"$\rho = 1.16$ [1/m]"),
-        (csv_path.with_name("exp3_rho_1_21.csv"), r"$\rho = 1.21$ [1/m]"),
-    ]
-
-    if all(path.exists() for path, _ in comparison_cases):
-        fig, axes = _new_exp3_comparison_figure(style)
-        for index, (case_path, title) in enumerate(comparison_cases):
-            _plot_spacetime_panel(
-                axes[index],
-                _load_position_frames(case_path),
-                title=title,
-                style=style,
-                corridor_length=corridor_length,
-                highlight_index=highlight_index,
-                compact=True,
-                show_ylabel=index == 0,
-            )
-
-        if style == "modern":
-            fig.subplots_adjust(left=0.078, right=0.99, bottom=0.15, top=0.90, wspace=0.12)
-        else:
-            fig.tight_layout(pad=0.45)
-        return _save(fig, output_prefix, style)
-
-    data = _load_position_frames(csv_path)
-    fig, ax = _new_figure(style)
-    _plot_spacetime_panel(
-        ax,
-        data,
-        title=f"$N={data.shape[1]}$, frames={data.shape[0]}",
-        style=style,
-        corridor_length=corridor_length,
-        highlight_index=highlight_index,
-        compact=False,
-        show_ylabel=True,
     )
 
     if style == "modern":
         _add_modern_header(
             fig,
             "Spatio-temporal pedestrian positions",
-            f"Periodic corridor snapshot; N={data.shape[1]}, frames={data.shape[0]}",
+            f"Periodic corridor snapshot; N={pedestrian_count}, frames={frame_count}",
         )
+
+    ax.set_xlabel("Position x [m]", color="#101828")
+    ax.set_ylabel("Frame index", color="#101828")
+    ax.set_xlim(0, corridor_length)
+    ax.set_ylim(-0.5, frame_count - 0.5)
+    ax.invert_yaxis()
+    ax.xaxis.set_major_locator(MultipleLocator(2))
+    ax.yaxis.set_major_locator(MultipleLocator(5))
+    _style_axes(ax, style, grid_alpha=0.48 if style == "modern" else 0.5)
+    legend = ax.legend(
+        loc="upper right",
+        frameon=True,
+        fancybox=style == "modern",
+        framealpha=0.96,
+        borderpad=0.65 if style == "modern" else 0.45,
+        handlelength=1.4 if style == "modern" else 1.2,
+        labelspacing=0.45,
+        borderaxespad=0.55,
+    )
+    _style_legend(legend, style)
 
     if style == "modern":
         fig.subplots_adjust(left=0.105, right=0.985, bottom=0.135, top=0.86)

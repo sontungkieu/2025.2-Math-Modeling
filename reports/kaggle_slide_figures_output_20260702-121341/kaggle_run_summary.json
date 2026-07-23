@@ -1,0 +1,31 @@
+{
+  "completed_at": "2026-07-02T12:36:38.692609+00:00",
+  "command": [
+    "/usr/bin/python3",
+    "slides/math_modelling/generate_slide_figures.py",
+    "--force",
+    "--skip-existing-output-copy",
+    "--t-relax",
+    "80000",
+    "--t-measure",
+    "80000",
+    "--density-count",
+    "12",
+    "--density-min",
+    "0.25",
+    "--density-max",
+    "2.45",
+    "--repeats",
+    "3",
+    "--workers",
+    "4"
+  ],
+  "figures": {
+    "velocity": "slides/math_modelling/velocity.png",
+    "system_size": "slides/math_modelling/system_size.png"
+  },
+  "generated_data": [
+    "slides/math_modelling/generated_data/system_size.csv",
+    "slides/math_modelling/generated_data/velocity_dispersion.csv"
+  ]
+}

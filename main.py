@@ -24,6 +24,11 @@ BASE_CONFIG: dict[str, float] = {
     "f": 2.0,
 }
 
+EXP3_CASES: tuple[dict[str, Any], ...] = (
+    {"name": "rho_1_16", "N": 20},
+    {"name": "rho_1_21", "N": 21},
+)
+
 
 def save_config(output_dir: Path, experiment_name: str, config: dict[str, Any]) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -131,8 +136,8 @@ def run_exp3(output_dir: Path, seed: int | None = None) -> Path:
     config: dict[str, Any] = dict(BASE_CONFIG)
     config.update(
         {
-            "N": 20,
-            "b": 0.56,
+            "cases": list(EXP3_CASES),
+            "b": 0.0,
             "use_remote": True,
             "frames": 30,
             "frame_interval": 200,
@@ -140,32 +145,38 @@ def run_exp3(output_dir: Path, seed: int | None = None) -> Path:
     )
     save_config(output_dir, "exp3", config)
 
-    output_path = output_dir / "exp3.csv"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    first_output_path = output_dir / "exp3.csv"
+    for case_index, case in enumerate(EXP3_CASES):
+        case_output_path = output_dir / f"exp3_{case['name']}.csv"
+        case_output_path.write_text("")
+        run_seed = None if seed is None else seed + case_index
 
-    rho, mean_velocity = simulate(
-        N=int(config["N"]),
-        L=float(config["L"]),
-        dt=float(config["dt"]),
-        T_relax=int(config["T_relax"]),
-        T_measure=int(config["T_measure"]),
-        a=float(config["a"]),
-        b=float(config["b"]),
-        tau=float(config["tau"]),
-        v0_mean=float(config["v0_mean"]),
-        v0_std=float(config["v0_std"]),
-        use_remote=bool(config["use_remote"]),
-        e=float(config["e"]),
-        f=float(config["f"]),
-        output_file=str(output_path),
-        seed=seed,
-    )
-    print(
-        f"rho: {rho:.2f}, b: {float(config['b']):.2f}, "
-        f"mean_velocity: {mean_velocity:.4f}, remote_action: {bool(config['use_remote'])}"
-    )
-    return output_path
+        rho, mean_velocity = simulate(
+            N=int(case["N"]),
+            L=float(config["L"]),
+            dt=float(config["dt"]),
+            T_relax=int(config["T_relax"]),
+            T_measure=int(config["T_measure"]),
+            a=float(config["a"]),
+            b=float(config["b"]),
+            tau=float(config["tau"]),
+            v0_mean=float(config["v0_mean"]),
+            v0_std=float(config["v0_std"]),
+            use_remote=bool(config["use_remote"]),
+            e=float(config["e"]),
+            f=float(config["f"]),
+            output_file=str(case_output_path),
+            seed=run_seed,
+        )
+        print(
+            f"case: {case['name']}, rho: {rho:.2f}, b: {float(config['b']):.2f}, "
+            f"mean_velocity: {mean_velocity:.4f}, remote_action: {bool(config['use_remote'])}"
+        )
+        if case_index == 0:
+            first_output_path.write_text(case_output_path.read_text())
+
+    return first_output_path
 
 
 def parse_args() -> argparse.Namespace:

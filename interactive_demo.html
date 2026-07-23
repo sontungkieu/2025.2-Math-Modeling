@@ -254,10 +254,15 @@
         }
 
         .btn.reset {
-            grid-column: 1 / -1;
             color: var(--coral);
             border-color: rgba(225, 29, 72, 0.28);
             background: #fff1f2;
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.48;
+            filter: none;
         }
 
         .btn:hover {
@@ -449,12 +454,12 @@
                         <input id="paramB" type="range" min="0" max="1.5" step="0.05" value="0.56">
                     </div>
                     <div class="control">
-                        <label for="paramV0"><span data-i18n="desiredVelocity">Vận tốc mong muốn</span> <output id="outV0">1.24 m/s</output></label>
-                        <input id="paramV0" type="range" min="0.5" max="2" step="0.05" value="1.24">
+                        <label for="paramV0"><span data-i18n="desiredVelocity">Vận tốc mong muốn</span> <output id="outV0">1.26 m/s</output></label>
+                        <input id="paramV0" type="range" min="0.5" max="2" step="0.01" value="1.26">
                     </div>
                     <div class="control">
                         <label for="paramTau"><span data-i18n="relaxationTime">Thời gian thư giãn</span> <output id="outTau">0.61 s</output></label>
-                        <input id="paramTau" type="range" min="0.1" max="2" step="0.05" value="0.61">
+                        <input id="paramTau" type="range" min="0.1" max="2" step="0.01" value="0.61">
                     </div>
                     <div class="control">
                         <label for="paramE"><span data-i18n="remoteStrength">Cường độ e</span> <output id="outE">0.07</output></label>
@@ -470,8 +475,9 @@
                     <h2 class="section-title" data-i18n="controlsSection">Điều khiển</h2>
                     <div class="buttons">
                         <button class="btn primary" id="playButton" type="button">Tạm dừng</button>
+                        <button class="btn icon" id="backButton" type="button" data-i18n="backButton">Lùi 1 frame</button>
                         <button class="btn icon" id="stepButton" type="button" data-i18n="stepButton">Bước 1 frame</button>
-                        <button class="btn reset" id="resetButton" type="button">Reset</button>
+                        <button class="btn reset" id="resetButton" type="button" data-i18n="resetButton">Reset về 0</button>
                     </div>
                 </section>
             </aside>
@@ -524,6 +530,7 @@
         const a = 0.36;
         const f = 2.0;
         const maxHistory = 170;
+        const maxUndoFrames = 300;
         const colors = {
             ink: "#1f2933",
             muted: "#667085",
@@ -561,8 +568,9 @@
                 controlsSection: "Điều khiển",
                 pauseButton: "Tạm dừng",
                 resumeButton: "Tiếp tục",
+                backButton: "Lùi 1 frame",
                 stepButton: "Bước 1 frame",
-                resetButton: "Reset",
+                resetButton: "Reset về 0",
                 densityMetric: "Mật độ",
                 meanVelocityMetric: "Vận tốc TB",
                 minGapMetric: "Khoảng cách min",
@@ -598,8 +606,9 @@
                 controlsSection: "Controls",
                 pauseButton: "Pause",
                 resumeButton: "Resume",
+                backButton: "Back frame",
                 stepButton: "Step frame",
-                resetButton: "Reset",
+                resetButton: "Reset to 0",
                 densityMetric: "Density",
                 meanVelocityMetric: "Mean velocity",
                 minGapMetric: "Min gap",
@@ -620,7 +629,7 @@
         let b = 0.56;
         let tau = 0.61;
         let e = 0.07;
-        let baseV0 = 1.24;
+        let baseV0 = 1.26;
         let stepsPerFrame = 25;
         let useRemote = true;
         let isPlaying = true;
@@ -633,6 +642,7 @@
         let history = [];
         let kinkHistory = [];
         let pendingKinkEvents = [];
+        let undoStack = [];
 
         const $ = (id) => document.getElementById(id);
         const corridorCanvas = $("corridorCanvas");
@@ -653,6 +663,7 @@
             remoteOn: $("remoteOn"),
             remoteOff: $("remoteOff"),
             playButton: $("playButton"),
+            backButton: $("backButton"),
             stepButton: $("stepButton"),
             resetButton: $("resetButton"),
         };
@@ -669,15 +680,19 @@
             });
             controls.langVi.classList.toggle("active", currentLanguage === "vi");
             controls.langEn.classList.toggle("active", currentLanguage === "en");
-            $("resetButton").textContent = t("resetButton");
             setRemoteMode(useRemote);
             syncFromInputs();
             if (x.length === N) {
                 updateMetrics();
                 draw();
             } else {
-                $("playButton").textContent = isPlaying ? t("pauseButton") : t("resumeButton");
+                updateButtons();
             }
+        }
+
+        function updateButtons() {
+            controls.playButton.textContent = isPlaying ? t("pauseButton") : t("resumeButton");
+            controls.backButton.disabled = undoStack.length === 0;
         }
 
         function resizeCanvas(canvas) {
@@ -793,6 +808,7 @@
             history = [];
             kinkHistory = [];
             pendingKinkEvents = [];
+            undoStack = [];
             elapsedSteps = 0;
             blockedLastStep = 0;
 
@@ -802,6 +818,57 @@
             }
             updateMetrics();
             draw();
+        }
+
+        function cloneKinkEvents(events) {
+            return events.map((event) => ({ index: event.index, position: event.position }));
+        }
+
+        function cloneKinkHistory(items) {
+            return items.map((events) => cloneKinkEvents(events));
+        }
+
+        function captureSimulationState() {
+            return {
+                x: [...x],
+                v: [...v],
+                v0: [...v0],
+                blockedState: [...blockedState],
+                history: history.map((frame) => [...frame]),
+                kinkHistory: cloneKinkHistory(kinkHistory),
+                pendingKinkEvents: cloneKinkEvents(pendingKinkEvents),
+                elapsedSteps,
+                blockedLastStep,
+            };
+        }
+
+        function restoreSimulationState(state) {
+            x = [...state.x];
+            v = [...state.v];
+            v0 = [...state.v0];
+            blockedState = [...state.blockedState];
+            history = state.history.map((frame) => [...frame]);
+            kinkHistory = cloneKinkHistory(state.kinkHistory);
+            pendingKinkEvents = cloneKinkEvents(state.pendingKinkEvents);
+            elapsedSteps = state.elapsedSteps;
+            blockedLastStep = state.blockedLastStep;
+            updateMetrics();
+            draw();
+        }
+
+        function pushUndoState() {
+            if (x.length !== N || v.length !== N) {
+                return;
+            }
+            undoStack.push(captureSimulationState());
+            if (undoStack.length > maxUndoFrames) {
+                undoStack.shift();
+            }
+        }
+
+        function clearUndoStack() {
+            undoStack = [];
+            updateButtons();
         }
 
         function computeForce(i, positions, velocities) {
@@ -878,10 +945,27 @@
             updateMetrics();
         }
 
-        function stepFrame() {
+        function stepFrame(recordUndo = true) {
+            if (recordUndo) {
+                pushUndoState();
+            }
             for (let i = 0; i < stepsPerFrame; i++) {
                 stepSimulation();
             }
+        }
+
+        function stepBackFrame() {
+            const previousState = undoStack.pop();
+            if (!previousState) {
+                updateButtons();
+                return;
+            }
+            restoreSimulationState(previousState);
+        }
+
+        function resetToZero() {
+            isPlaying = false;
+            initSimulation();
         }
 
         function minGap() {
@@ -898,7 +982,7 @@
             $("metricGap").textContent = `${minGap().toFixed(2)} m`;
             $("metricBlocked").textContent = String(blockedLastStep);
             $("stepReadout").textContent = `t = ${(elapsedSteps * dt).toFixed(3)} s`;
-            $("playButton").textContent = isPlaying ? t("pauseButton") : t("resumeButton");
+            updateButtons();
         }
 
         function drawArrow(ctx, x0, y0, x1, y1, color) {
@@ -1136,18 +1220,29 @@
             currentLanguage = "en";
             applyLanguage();
         });
-        controls.remoteOn.addEventListener("click", () => setRemoteMode(true));
-        controls.remoteOff.addEventListener("click", () => setRemoteMode(false));
+        controls.remoteOn.addEventListener("click", () => {
+            setRemoteMode(true);
+            clearUndoStack();
+        });
+        controls.remoteOff.addEventListener("click", () => {
+            setRemoteMode(false);
+            clearUndoStack();
+        });
         controls.paramN.addEventListener("input", initSimulation);
         controls.paramL.addEventListener("input", initSimulation);
         controls.paramV0.addEventListener("input", initSimulation);
-        controls.paramB.addEventListener("input", () => { syncFromInputs(); });
-        controls.paramTau.addEventListener("input", () => { syncFromInputs(); });
-        controls.paramE.addEventListener("input", () => { syncFromInputs(); });
-        controls.paramSpeed.addEventListener("input", () => { syncFromInputs(); });
+        controls.paramB.addEventListener("input", () => { syncFromInputs(); clearUndoStack(); });
+        controls.paramTau.addEventListener("input", () => { syncFromInputs(); clearUndoStack(); });
+        controls.paramE.addEventListener("input", () => { syncFromInputs(); clearUndoStack(); });
+        controls.paramSpeed.addEventListener("input", () => { syncFromInputs(); clearUndoStack(); });
         controls.playButton.addEventListener("click", () => {
             isPlaying = !isPlaying;
             updateMetrics();
+        });
+        controls.backButton.addEventListener("click", () => {
+            isPlaying = false;
+            stepBackFrame();
+            draw();
         });
         controls.stepButton.addEventListener("click", () => {
             if (!isPlaying) {
@@ -1156,7 +1251,7 @@
             }
         });
         controls.resetButton.addEventListener("click", () => {
-            initSimulation();
+            resetToZero();
         });
         window.addEventListener("resize", resizeAll);
 

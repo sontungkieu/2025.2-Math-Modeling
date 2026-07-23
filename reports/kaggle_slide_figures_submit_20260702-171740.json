@@ -1,0 +1,28 @@
+{
+  "owner": "kieutung",
+  "ref": "kieutung/math-modeling-slide-figures-20260702-171740",
+  "title": "Math Modeling Slide Figures 20260702-171740",
+  "accelerator": "gpu",
+  "staging_dir": null,
+  "dry_run": false,
+  "parameters": {
+    "t_relax": 80000,
+    "t_measure": 80000,
+    "density_count": 12,
+    "density_min": 0.25,
+    "density_max": 2.45,
+    "repeats": 3,
+    "workers": 4
+  },
+  "push": {
+    "returncode": 0,
+    "stdout": "Kernel version 1 successfully pushed.  Please check progress at https://www.kaggle.com/code/kieutung/math-modeling-slide-figures-20260702-171740",
+    "stderr": ""
+  },
+  "status": {
+    "method": "status",
+    "returncode": 0,
+    "stdout": "kieutung/math-modeling-slide-figures-20260702-171740 has status \"KernelWorkerStatus.QUEUED\"",
+    "stderr": ""
+  }
+}

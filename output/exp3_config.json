@@ -9,8 +9,17 @@
     "v0_std": 0.05,
     "e": 0.07,
     "f": 2.0,
-    "N": 20,
-    "b": 0.56,
+    "cases": [
+        {
+            "name": "rho_1_16",
+            "N": 20
+        },
+        {
+            "name": "rho_1_21",
+            "N": 21
+        }
+    ],
+    "b": 0.0,
     "use_remote": true,
     "frames": 30,
     "frame_interval": 200
